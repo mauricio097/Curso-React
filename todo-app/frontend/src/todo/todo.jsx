@@ -4,6 +4,7 @@ import axios from 'axios'
 import PageHeader from '../template/pageHeader'
 import TodoForm from './todoForm'
 import TodoList from './todoList'
+import { runInThisContext } from 'vm';
 
 const URL = 'http://localhost:3003/api/todos'
 
@@ -16,6 +17,8 @@ export default class Todo extends Component {
         this.handleRemove = this.handleRemove.bind(this)
         this.handleMarkAsDone = this.handleMarkAsDone.bind(this)
         this.handleMarkAsPending = this.handleMarkAsPending.bind(this)
+        this.handleSearch = this.handleSearch.bind(this)
+        this.handleClear = this.handleClear.bind(this)
         this.refresh()
     }
     
@@ -40,13 +43,22 @@ export default class Todo extends Component {
             .then(resp=> this.refresh())
     }
 
-    refresh() {
-        axios.get(`${URL}?sort=-createdAt`)
+    refresh(description = '') {
+        const search = description ? `&description__regex=/${description}/` : ''
+        axios.get(`${URL}?sort=-createdAt${search}`)
             .then((resp) => this.setState({...this.state,description: '',list: resp.data}))
+    }
+
+    handleSearch(){
+        this.refresh(this.state.description)
     }
 
     handleChange(e) {
         this.setState({...this.state, description: e.target.value})
+    }
+
+    handleClear(e){
+        this.refresh()
     }
     
     render(){
@@ -55,11 +67,14 @@ export default class Todo extends Component {
                 <PageHeader name='Tarefas' small='Cadastro'></PageHeader>
                 <TodoForm description={this.state.description} 
                     handleAdd={this.handleAdd}
-                    handleChange={this.handleChange}/>
+                    handleChange={this.handleChange}
+                    handleSearch={this.handleSearch}
+                    handleClear={this.handleClear}/>
                 <TodoList list={this.state.list}
                     handleRemove={this.handleRemove}
                     handleMarkAsDone={this.handleMarkAsDone}
-                    handleMarkAsPending={this.handleMarkAsPending} />
+                    handleMarkAsPending={this.handleMarkAsPending}
+                     />
             </div>    
         )
     }
